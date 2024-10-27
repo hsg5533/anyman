@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Anyman</title>
+    <link rel="stylesheet" type="text/css" href="css/reset.css" />
+    <link rel="stylesheet" type="text/css" href="css/style.css" />
+    <link rel="stylesheet" type="text/css" href="css/slick.css" />
+    <script src="js/jquery.min.js"></script>
+    <script src="js/fullpage.js"></script>
+    <script src="js/slick.js"></script>
+    <script src="js/js.js"></script>
+
+    <link rel="shortcut icon" href="img/anyman_favicon.ico" />
+
+    <meta
+      name="naver-site-verification"
+      content="ab13661574be764068e8e4d3150e6495441c7946"
+    />
+    <meta
+      name="description"
+      content="사람을 연결하는 중개플랫폼. 시간,재능,경험을 공유하라"
+    />
+    <meta name="author" content="에이에스엔" />
+    <meta
+      name="keyword"
+      content="ASN, 에이에스엔, 애니맨, 애니맨앱, 애니맨헬퍼, 애니맨헬퍼앱, 헬프서비스, 해주세요, 도와주세요, 심부름, 잔심부름, 잔심부름앱, 심부름앱, 해줄게요, 해드릴게요, 배달음식, 음식배달, 가구옮기기, 가구버리기, 가구배치, 해주세요심부름, anyman, helper, anymanhelper, 헬프, 헬퍼, 투잡, 부업, 공유경제"
+    />
+    <meta property="og:title" content="애니맨" />
+    <meta
+      property="og:description"
+      content="사람을 연결하는 중개플랫폼. 시간,재능,경험을 공유하라"
+    />
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+    <script
+      async
+      src="https://www.googletagmanager.com/gtag/js?id=UA-101345533-4"
+    ></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag() {
+        dataLayer.push(arguments);
+      }
+      gtag("js", new Date());
+      gtag("config", "UA-101345533-4");
+    </script>
+
+    <script>
+      $(document).ready(function () {
+        var total = 0; // 총 페이지 수
+        var perPage = 3; // 한페이지당 보여줄 데이터갯수
+        var limitNum = 0;
+        var pgCount = 5; // 페이지당 보여주는 페이지갯수
+        var urlStr = "https://avatar25.com/api/board/article/";
+
+        notice(urlStr);
+
+        setTimeout(function () {
+          paging(total, perPage, pgCount, 1);
+        }, 100);
+
+        function isNull(para) {
+          if (
+            para === "" ||
+            para === null ||
+            para === undefined ||
+            para === 0 ||
+            para === NaN
+          )
+            return true;
+          else return false;
+        }
+
+        function notice(paraUrl) {
+          $.ajax({
+            url: paraUrl,
+            type: "GET",
+            dataType: "json",
+            success: function (listData) {
+              total = listData.count;
+
+              $(".notice_list").empty();
+
+              var list = listData["data"];
+
+              $.each(list, function (index, item) {
+                var imgUrl = "";
+                var imgTagStr = "";
+
+                if (item.files.length > 0) {
+                  imgUrl = item.files[0].attach;
+                }
+                if (imgUrl != "") {
+                  imgTagStr = "<div class='img' id='imgId'>";
+                }
+
+                var listDay = JSON.stringify(item.created_datetime);
+                var listDate = listDay.substr(1, 10);
+
+                if (!isNull(item.id)) paraID = item.id;
+                if (!isNull(item.title)) paraTitle = item.title;
+                if (!isNull(item.content)) contentStr = item.content;
+                if (!isNull(listDate)) paraListDate = listDate;
+
+                $(".notice_list").append(
+                  "<a class='list' href='javascript:noticeDetail(" +
+                    JSON.stringify(item) +
+                    ")'><div class='text'><div class='title'>" +
+                    item.title +
+                    "</div><div class='content'>" +
+                    item.content +
+                    "</div><div class='date'>" +
+                    listDate +
+                    "</div></div>" +
+                    imgTagStr +
+                    "<img src='" +
+                    imgUrl +
+                    "' >" +
+                    "</div></a>"
+                );
+              });
+
+              ////클릭시 디테일 페이지
+              $(".notice_list .list").click(function () {
+                $(".notice_detail").css({ display: "block" });
+                $(".notice_detail").empty();
+              });
+            },
+          });
+        }
+
+        //paging jquery 시작//
+
+        function paging(totalData, dataPerPage, pageCount, currentPage) {
+          var totalPage = Math.ceil(totalData / dataPerPage); // 총 페이지 수
+          var pageGroup = Math.ceil(currentPage / pageCount); // 페이지 그룹
+
+          var last = pageGroup * pageCount; // 화면에 보여질 마지막 페이지 번호
+          if (last > totalPage) {
+            last = totalPage;
+          }
+          var first = last - (pageCount - 1); // 화면에 보여질 첫번째 페이지 번호
+          var next = last + 1;
+          var prev = first - 1;
+
+          if (totalPage < 1) {
+            first = last;
+          }
+
+          var $pingingView = $("#paging");
+
+          var html = "";
+
+          if (first > 1) {
+            html += "<a href=# id='prev'></a> ";
+          }
+
+          for (var i = first; i <= last; i++) {
+            if (i > 0) {
+              html += "<a href='#' id=" + i + ">" + i + "</a> ";
+            }
+          }
+
+          if (next >= 2 && next <= totalPage) {
+            html += "<a href=# id='next'></a>";
+          }
+
+          $("#paging").html(html); // 페이지 목록 생성
+          $("#paging a#" + currentPage).css({
+            "font-weight": "bold",
+          }); // 현재 페이지 표시
+
+          $("#paging a").click(function () {
+            $(".notice_detail").empty();
+
+            var $item = $(this);
+            var $id = $item.attr("id");
+            var selectedPage = $item.text();
+
+            if ($id == "next") selectedPage = next;
+            if ($id == "prev") selectedPage = prev;
+
+            limitNum = selectedPage - 1;
+
+            paging(totalData, dataPerPage, pageCount, selectedPage);
+
+            // var newUrl = urlStr + "?page=" + selectedPage;
+            //var newUrl = urlStr + "/?offset=" + selectedPage + 3 + "&page=1";
+            // var newUrl = urlStr + "/?offset=" + selectedPage + 3;
+            var newUrl =
+              urlStr +
+              "?limit=" +
+              perPage +
+              "&offset=" +
+              (selectedPage - 1) * 3;
+
+            console.log("selectedPage ===>" + selectedPage);
+            console.log("newUrl ===> " + newUrl);
+
+            notice(newUrl);
+          });
+
+          ///리스트 클릭 시 리스트 페이지 높이
+          $(".notice_list .list").click(function () {
+            $(".notice_list").css({ height: "690px" });
+            if (innerWidth <= 500) {
+              $(".notice_list").css({ height: "540px" });
+            }
+          });
+        }
+
+        //paging jquery 끝//
+      });
+
+      function noticeDetail(data) {
+        var imgUrl = "";
+
+        if (data.files.length > 0) {
+          imgUrl = data.files[0].attach;
+        }
+
+        var listDay = JSON.stringify(data.created_datetime);
+        var listDate = listDay.substr(1, 10);
+
+        $(".notice_detail").append(
+          "<div class='detail'><div class='title'>" +
+            data.title +
+            "</div><div class='date'>" +
+            listDate +
+            "</div><div class='img'>" +
+            "<img src='" +
+            imgUrl +
+            "' >" +
+            "</div><div class='content'>" +
+            data.content +
+            "</div></div><div class='go_list'><a>목록</a></div>"
+        );
+
+        if (imgUrl === "") {
+          $(".notice_detail .detail .img").css({ display: "none" });
+        }
+
+        ///디테일페이지에서 목록 클릭 시 리스트 페이지
+        $(".notice_detail .go_list a").click(function () {
+          $(".notice_detail").css({ display: "none" });
+        });
+
+        ///리스트 클릭 시 리스트 페이지 높이
+        $(".notice_detail .go_list a").click(function () {
+          $(".notice_list").css({ height: "auto" });
+        });
+      }
+    </script>
+  </head>
+
+  <body>
+    <div id="wrap" class="company">
+      <header>
+        <a>
+          <a href="index.html">
+            <span>ANYMAN</span>
+          </a>
+        </a>
+        <nav class="pc-nav">
+          <div class="oneDep">
+            <a href="index.html">애니맨</a>
+          </div>
+          <div class="oneDep">
+            <a href="use.html">이용방법</a>
+          </div>
+          <div class="oneDep">
+            <a href="tip.html">활용TIP</a>
+          </div>
+          <div class="oneDep">
+            <a href="helper.html">헬퍼지원하기</a>
+          </div>
+          <div class="oneDep">
+            <a href="company.html">회사소개</a>
+          </div>
+          <div class="oneDep">
+            <a href="terms.html">서비스 이용약관</a>
+          </div>
+        </nav>
+        <nav class="mobile-nav">
+          <div id="mySidenav" class="sidenav">
+            <a href="javascript:void(0)" class="closebtn" onclick="closeNav()"
+              >&times;</a
+            >
+            <a href="index.html">애니맨</a>
+            <a href="use.html">이용방법</a>
+            <a href="tip.html">활용TIP</a>
+            <a href="helper.html">헬퍼지원하기</a>
+            <a href="company.html">회사소개</a>
+            <a href="terms.html">서비스 이용약관</a>l
+          </div>
+          <span onclick="openNav()">&#9776;</span>
+        </nav>
+      </header>
+      <div class="section bg">
+        <p>회사소개</p>
+      </div>
+      <div class="section bg mb">
+        <p>회사소개</p>
+      </div>
+      <div class="section titlebox">
+        <div class="subVisual">
+          <div class="title">
+            <p>CEO 인사말</p>
+          </div>
+        </div>
+      </div>
+      <div class="section ceo">
+        <div class="innerWrap pc">
+          <div class="profile">
+            <div class="img">
+              <img src="img/company_img01.jpg" />
+            </div>
+            <div class="logo">
+              <img src="img/company_img02.jpg" />
+            </div>
+          </div>
+          <div class="text pc">
+            <p class="big">
+              사람들이 원하는 바를 우리가 다 들어 줄 수는 없을까?
+              <br />
+              누구나 원하면 자유롭게 일할 수 있고,
+              <br />
+              노력한 만큼의 대가를 얻을 수 있으면 좋을 텐데
+            </p>
+            <p>
+              2008년부터 생활편의대행서비스를 해오던 애니맨은 이러한 생각에
+              착안하여
+              <br />
+              2016년 4월 애니맨의 어플리케이션을 세상에 선보였습니다.
+            </p>
+            <p class="sub">'사람과 사람을 연결하다'</p>
+            <p>
+              세상 모든 일들을 스스로 해결할 필요는 없고 서로 도우며 살아갈 수
+              있습니다.
+              <br />
+              누군가를 도와주기 위해 준비되어 있는 헬퍼들을 활용해보세요.
+              <br />
+              그리고 애니맨의 헬퍼가 되어 자율 근무를 통해 원하는
+              <br />
+              만큼의 수익을 증대시킬 수도 있습니다.
+            </p>
+            <p>
+              지금 우리나라에는 5천 만의 도움이 필요한 일들이 있을 것이고,
+              <br />
+              우리 아이들이 커서 누군가를 돕는 날이 온다면 이미 5천 만의
+              헬퍼들이 있는 것입니다.
+            </p>
+            <p>
+              이들이 가진 무한한 자원을 애니맨 앱을 통하여 공유하면 해결하지
+              못할 일도 없습니다.
+              <br />
+              여러분은 가족과 함께 행복한 시간을 보내고, 여유있는 시간을 보내면
+              됩니다.
+            </p>
+            <p>
+              서로 가진 시간과 재능 그리고 기술들을 공유하는 플랫폼!
+              <br />
+              이것은 단순하지만 오랜 기간 오프라인 노하우가 있었기에
+              가능했습니다.
+            </p>
+            <p>
+              사람과 사람의 연결! 누구나 해본 상상이겠지만
+              <br />
+              애니맨은 애니맨의 방식으로 그 상상을 실현해 나가고 있습니다.
+              <br />
+              세계의 모든 사람들이 애니맨을 통하여 자유롭게 살아가고,
+              <br />
+              애니맨은 인류에 커다란 봉사를 하는 그날까지 함께 할 것입니다.
+            </p>
+            <p class="ceo">
+              대표이사 윤추황 <img src="img/company_img03.jpg" />
+            </p>
+          </div>
+        </div>
+        <div class="innerWrap mb">
+          <p class="big">
+            사람들이 원하는 바를
+            <br />
+            우리가 다 들어 줄 수는 없을까?
+            <br /><br />
+            누구나 원하면 자유롭게 일할 수 있고, 노력한 만큼의 대가를 얻을 수
+            있으면 좋을 텐데
+          </p>
+          <div class="profile">
+            <div class="img">
+              <img src="img/company_img01_mb.png" />
+            </div>
+          </div>
+          <div class="text">
+            <p>
+              2008년부터 생활편의대행서비스를 해오던 애니맨은 이러한 생각에
+              착안하여 2016년 4월 애니맨의 어플리케이션을 세상에 선보였습니다.
+            </p>
+            <p class="sub">'사람과 사람을 연결하다'</p>
+            <p>
+              세상 모든 일들을 스스로 해결할 필요는 없고 서로 도우며 살아갈 수
+              있습니다. 누군가를 도와주기 위해 준비되어 있는 헬퍼들을
+              활용해보세요.
+              <br />
+              그리고 애니맨의 헬퍼가 되어 자율 근무를 통해 원하는 만큼의 수익을
+              증대시킬 수도 있습니다. 지금 우리나라에는 5천 만의 도움이 필요한
+              일들이 있을 것이고, 우리 아이들이 커서 누군가를 돕는 날이 온다면
+              이미 5천 만의 헬퍼들이 있는 것입니다.
+              <br />
+              이들이 가진 무한한 자원을 애니맨 앱을 통하여 공유하면 해결하지
+              못할 일도 없습니다. 여러분은 가족과 함께 행복한 시간을 보내고,
+              여유있는 시간을 보내면 됩니다.
+              <br />
+              서로 가진 시간과 재능 그리고 기술들을 공유하는 플랫폼!
+              <br />
+              이것은 단순하지만 오랜 기간 오프라인 노하우가 있었기에
+              가능했습니다.
+              <br />
+              사람과 사람의 연결! 누구나 해본 상상이겠지만 애니맨은 애니맨의
+              방식으로 그 상상을 실현해 나가고 있습니다.
+              <br />
+              세계의 모든 사람들이 애니맨을 통하여 자유롭게 살아가고, 애니맨은
+              인류에 커다란 봉사를 하는 그날까지 함께 할 것입니다.
+            </p>
+            <p class="ceo">
+              대표이사 윤추황 <img src="img/company_img03.jpg" />
+            </p>
+          </div>
+        </div>
+      </div>
+      <div class="section titlebox">
+        <div class="subVisual">
+          <div class="title">
+            <p>언론보도</p>
+          </div>
+        </div>
+      </div>
+      <div class="section notice_box">
+        <div class="innerWrap">
+          <div class="notice">
+            <div class="notice_detail">
+              <!-- <div class="detail">
+                        <div class="title">
+                            ['19.08.19. 중앙일보'] 시급 2만원 반려견 산책, 스타트업이 만든 '틈새 일자리'
+                        </div>
+                        <div class="date">
+                            2020.07.21
+                        </div>
+                        <div class="img">
+                            <img src="img/ex_img.jpeg">
+                        </div>
+                        <div class="content">
+                            주부 김미경(47)씨는 일주일에 두 번 서울 동대문구의 한 가정집을 찾아 말티즈 루루와 산책한다.
+                            <br>
+                            ‘우푸’의 ‘도그워커(전문 반려견 산책인)’로 일하고 있다. 주부 김미경(47)씨는 일주일에 두 번 서울 동대문구의 한 가정집을 찾아 말티즈 루루와 산책한다.
+                            ‘우푸’의 ‘도그워커(전문 반려견 산책인)’로 일하고 있다. 주부 김미경(47)씨는 일주일에 두 번 서울 동대문구의 한 가정집을 찾아 말티즈 루루와 산책한다.
+                            ‘우푸’의 ‘도그워커(전문 반려견 산책인)’로 일하고 있다. 주부 김미경(47)씨는 일주일에 두 번 서울 동대문구의 한 가정집을 찾아 말티즈 루루와 산책한다.
+                            ‘우푸’의 ‘도그워커(전문 반려견 산책인)’로 일하고 있다. 주부 김미경(47)씨는 일주일에 두 번 서울 동대문구의 한 가정집을 찾아 말티즈 루루와 산책한다.
+                            <br><br>
+                            ‘우푸’의 ‘도그워커(전문 반려견 산책인)’로 일하고 있다.
+                            <br>
+                            ‘우푸’의 ‘도그워커(전문 반려견 산책인)’로 일하고 있다.
+                            <br>
+                            ‘우푸’의 ‘도그워커(전문 반려견 산책인)’로 일하고 있다.
+                            <br>
+                            ‘우푸’의 ‘도그워커(전문 반려견 산책인)’로 일하고 있다.
+                            <br>
+                            ‘우푸’의 ‘도그워커(전문 반려견 산책인)’로 일하고 있다.
+                            <br>
+                            ‘우푸’의 ‘도그워커(전문 반려견 산책인)’로 일하고 있다.
+                            <br>
+                            ‘우푸’의 ‘도그워커(전문 반려견 산책인)’로 일하고 있다.
+                            <br>
+                            ‘우푸’의 ‘도그워커(전문 반려견 산책인)’로 일하고 있다.
+                            <br>
+                            ‘우푸’의 ‘도그워커(전문 반려견 산책인)’로 일하고 있다.
+                            <br>
+                            ‘우푸’의 ‘도그워커(전문 반려견 산책인)’로 일하고 있다.
+                            <br>
+                            ‘우푸’의 ‘도그워커(전문 반려견 산책인)’로 일하고 있다.
+                            <br>
+                            ‘우푸’의 ‘도그워커(전문 반려견 산책인)’로 일하고 있다.
+                            <br>
+                            ‘우푸’의 ‘도그워커(전문 반려견 산책인)’로 일하고 있다.
+                            <br>
+                            ‘우푸’의 ‘도그워커(전문 반려견 산책인)’로 일하고 있다.
+                        </div>
+                    </div>
+                    <div class="go_list">
+                        <a>목록</a>
+                    </div> -->
+            </div>
+            <div class="notice_list">
+              <!-- <a class="list">
+                        <div class="text">
+                            <div class="title">
+                                [19.08.19. 중앙일보] 시급 2만원 반려견 산책, 스타트업이 만든 '틈새 일자리'
+                            </div>
+                            <div class="content">
+                                주부 김미경(47)씨는 일주일에 두 번 서울 동대문구의 한 가정집을 찾아 말티즈 루루와 산책한다. '우푸'의 '도그워커(전문 반려견 산책인)'로 일하고
+                                있다.
+                                1)산책용 3원에 어쩌고 저쩌고 쪼랑쪼랑 아 배불러배룰럽ㄹ럽배불럴배불럴럴러 졸렬로졀로려졸
+                            </div>
+                            <div class="date">
+                                2020.07.13
+                            </div>
+                        </div>
+                        <div class="img">
+                            <img src="img/ex_img.jpeg">
+                        </div>
+                    </a>
+                    <a class="list">
+                        <div class="text">
+                            <div class="title">
+                                [19.08.19. 중앙일보] 시급 2만원 반려견 산책, 스타트업이 만든 '틈새 일자리'
+                            </div>
+                            <div class="content">
+                                주부 김미경(47)씨는 일주일에 두 번 서울 동대문구의 한 가정집을 찾아 말티즈 루루와 산책한다. '우푸'의 '도그워커(전문 반려견 산책인)'로 일하고
+                                있다.
+                                1)산책용 3원에 어쩌고 저쩌고 쪼랑쪼랑 아 배불러배룰럽ㄹ럽배불럴배불럴럴러 졸렬로졀로려졸
+                            </div>
+                            <div class="date">
+                                2020.07.13
+                            </div>
+                        </div>
+                    </a>
+                    <a class="list">
+                        <div class="text">
+                            <div class="title">
+                                [19.08.19. 중앙일보] 시급 2만원 반려견 산책, 스타트업이 만든 '틈새 일자리'
+                            </div>
+                            <div class="content">
+                                주부 김미경(47)씨는 일주일에 두 번 서울 동대문구의 한 가정집을 찾아 말티즈 루루와 산책한다. '우푸'의 '도그워커(전문 반려견 산책인)'로 일하고
+                                있다.
+                                1)산책용 3원에 어쩌고 저쩌고 쪼랑쪼랑 아 배불러배룰럽ㄹ럽배불럴배불럴럴러 졸렬로졀로려졸
+                            </div>
+                            <div class="date">
+                                2020.07.13
+                            </div>
+                        </div>
+                        <div class="img">
+                            <img src="img/ex_img.jpeg">
+                        </div>
+                    </a>
+                    <a class="list">
+                        <div class="text">
+                            <div class="title">
+                                [19.08.19. 중앙일보] 시급 2만원 반려견 산책, 스타트업이 만든 '틈새 일자리'
+                            </div>
+                            <div class="content">
+                                주부 김미경(47)씨는 일주일에 두 번 서울 동대문구의 한 가정집을 찾아 말티즈 루루와 산책한다. '우푸'의 '도그워커(전문 반려견 산책인)'로 일하고
+                                있다.
+                                1)산책용 3원에 어쩌고 저쩌고 쪼랑쪼랑 아 배불러배룰럽ㄹ럽배불럴배불럴럴러 졸렬로졀로려졸
+                            </div>
+                            <div class="date">
+                                2020.07.13
+                            </div>
+                        </div>
+                        <div class="img">
+                            <img src="img/ex_img.jpeg">
+                        </div>
+                    </a> -->
+            </div>
+            <div class="paging">
+              <div id="paging">
+                <!-- <a id="prev"></a>
+                        <a>1</a>
+                        <a>2</a>
+                        <a class="active">3</a>
+                        <a>4</a>
+                        <a>5</a>
+                        <a id="next"></a> -->
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="section all-ft">
+        <div class="slick-box innerWrap">
+          <div class="brand-logo">
+            <div>
+              <img src="img/partner_01.png" />
+            </div>
+            <div>
+              <img src="img/partner_02.png" />
+            </div>
+            <div>
+              <img src="img/partner_03.png" />
+            </div>
+            <div>
+              <img src="img/partner_04.png" />
+            </div>
+            <div>
+              <img src="img/partner_05.png" />
+            </div>
+            <div>
+              <img src="img/partner_06.png" />
+            </div>
+            <div>
+              <img src="img/partner_07.png" />
+            </div>
+          </div>
+        </div>
+        <div class="app-down">
+          <div class="innerWrap">
+            <div class="main-txt">
+              <p>사람과 사람을 연결하다</p>
+              <p class="title">애니맨</p>
+            </div>
+            <div class="app">
+              <a
+                target="_blank"
+                href="https://play.google.com/store/apps/details?id=kr.nacommunity.anyman"
+              >
+                <img src="img/google-logo.png" />
+              </a>
+              <a
+                target="_blank"
+                href="https://apps.apple.com/kr/app/id1341537162"
+              >
+                <img src="img/apple-logo.png" />
+              </a>
+            </div>
+          </div>
+        </div>
+        <footer class="footer" id="footer">
+          <div class="innerWrap">
+            <div class="txt">
+              <div class="o-dep">
+                <p>
+                  고객센터 <a href="tel:1588-5279">1588-5279</a>카카오톡 채널
+                  <a target="_blank" href="http://pf.kakao.com/_lFfbd"
+                    >애니맨</a
+                  >
+                </p>
+                <span>(오전 9시 30분 ~ 오후 6시, 점심시간 12시 ~ 1시)</span>
+              </div>
+              <div class="tw-dep">
+                <p>
+                  주식회사<b>에이에스엔</b><span>|</span>사업자 등록번호<b
+                    >261-81-11760</b
+                  ><span>|</span>통신판매업신고<b>제2016-서울구로-0074호</b>
+                </p>
+                <p>
+                  주소<b>서울시 구로구 디지털로 30길 28 마리오타워 418호</b>
+                </p>
+                <p>
+                  문의메일<b>help@anyman.co.kr</b><span>|</span>기업제휴<b
+                    >biz@anyman.co.kr</b
+                  >
+                </p>
+              </div>
+              <div class="th-dep">
+                Copyright. 2020. ASN Co., Ltd. All Rights Reserved.
+              </div>
+            </div>
+            <div class="logo">
+              <div class="sns">
+                <ul>
+                  <li>
+                    <a target="_blank" href="http://pf.kakao.com/_lFfbd"></a>
+                  </li>
+                  <li>
+                    <a
+                      target="_blank"
+                      href="https://www.facebook.com/anyman5279/?view_public_for=143054876095001"
+                    ></a>
+                  </li>
+                  <li>
+                    <a
+                      target="_blank"
+                      href="https://blog.naver.com/anyman_asn"
+                    ></a>
+                  </li>
+                  <li>
+                    <a
+                      target="_blank"
+                      href="https://www.instagram.com/anyman_official/?hl=ko"
+                    ></a>
+                  </li>
+                </ul>
+              </div>
+              <div class="seoul">
+                <img src="img/footer-banner.png" />
+              </div>
+            </div>
+          </div>
+        </footer>
+      </div>
+    </div>
+
+    <script src="js/animation.js"></script>
+    <link
+      rel="stylesheet"
+      href="css/animate.css"
+      type="text/css"
+      media="screen"
+    />
+  </body>
+</html>
